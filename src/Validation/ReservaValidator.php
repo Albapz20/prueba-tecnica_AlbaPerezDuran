@@ -5,6 +5,7 @@ namespace ReservasAlba\Validation;
 
 use DateTimeImmutable;
 use ReservasAlba\Exception\ValidationException;
+use ReservasAlba\Domain\EstadoReserva;
 
 final class ReservaValidator
 {
@@ -73,6 +74,22 @@ final class ReservaValidator
             'importe'            => number_format((float) $importe, 2, '.', ''),  
             'notas'              => $notas,
         ];
+    }
+
+    // Valida el estado que pide el cliente en un cambio de estado.
+    public function validarCambioEstado(array $entrada): EstadoReserva
+    {
+        $estado = is_string($entrada['estado'] ?? null)
+            ? EstadoReserva::tryFrom($entrada['estado'])
+            : null;
+
+        if ($estado === null || $estado === EstadoReserva::Pendiente) {
+            throw new ValidationException([
+                'estado' => 'El estado debe ser "confirmada" o "cancelada".',
+            ]);
+        }
+
+        return $estado;
     }
 
     // Valida un campo de texto obligatorio. Devuelve el texto sin espacios sobrantes, o null si no es válido.

@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Repository;
+namespace ReservasAlba\Repository;
 
 // Importamos la clase PDO.
 use PDO;
@@ -57,17 +57,27 @@ final class ReservaRepository
     }
 
     // Devuelve una reserva por su id, o null si no existe.
+    public function buscarPorId(int $id, bool $bloquear = false): ?array
+        {
+        $sql = 'SELECT id, nombre_huesped, email_huesped, nombre_alojamiento,
+                       fecha_entrada, fecha_salida, estado, importe, notas, fecha_creacion
+                FROM reserva WHERE id = :id';
 
-    public function buscarPorId(int $id): ?array
-    {
-        $stmt = $this->pdo->prepare(
-            'SELECT id, nombre_huesped, email_huesped, nombre_alojamiento,
-                    fecha_entrada, fecha_salida, estado, importe, notas, fecha_creacion
-             FROM reserva WHERE id = :id'
-        );
+        if ($bloquear) {
+            $sql .= ' FOR UPDATE';
+        }
+
+        $stmt = $this->pdo->prepare($sql);
         $stmt->execute([':id' => $id]);
 
         return $stmt->fetch() ?: null;
+    }
+
+    // Actualiza el estado de una reserva.
+    public function actualizarEstado(int $id, string $estado): void
+    {
+        $stmt = $this->pdo->prepare('UPDATE reserva SET estado = :estado WHERE id = :id');
+        $stmt->execute([':estado' => $estado, ':id' => $id]);
     }
 
     //Inserta una reserva nueva y devuelve el id que le asignó MySQL.
