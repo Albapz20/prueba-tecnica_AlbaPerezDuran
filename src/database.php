@@ -1,10 +1,11 @@
 <?php
 declare(strict_types=1);
 
-namespace App;
+namespace ReservasAlba;
 
 use PDO;
 
+// Crea la conexión a la base de datos.
 final class Database
 {
     public static function connect(array $config): PDO
@@ -15,9 +16,12 @@ final class Database
         );
 
         return new PDO($dsn, $config['user'], $config['password'], [
-            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,  
-            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,       
-            PDO::ATTR_EMULATE_PREPARES   => false,                   
+            // Si una consulta falla, lanza una excepción.
+            PDO::ATTR_ERRMODE            => PDO::ERRMODE_EXCEPTION,
+            // Las filas llegan como arrays asociativos.
+            PDO::ATTR_DEFAULT_FETCH_MODE => PDO::FETCH_ASSOC,
+         
+            PDO::ATTR_EMULATE_PREPARES   => false,
         ]);
     }
 }
