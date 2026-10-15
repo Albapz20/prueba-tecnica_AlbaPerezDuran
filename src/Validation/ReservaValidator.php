@@ -129,4 +129,46 @@ final class ReservaValidator
 
         return $fecha;
     }
+    // Valida los filtros de la lista de reservas. Devuelve solo los filtros esperados, ya limpios.
+    public function validarFiltros(array $query): array
+    {
+        $errores = [];
+        $filtros = ['estado' => null, 'desde' => null, 'hasta' => null, 'q' => null];
+
+        // Estado: debe ser uno de los tres valores del enum.
+        $estado = $query['estado'] ?? '';
+        if ($estado !== '') {
+            if (!is_string($estado) || EstadoReserva::tryFrom($estado) === null) {
+                $errores['estado'] = 'Estado no válido.';
+            } else {
+                $filtros['estado'] = $estado;
+            }
+        }
+
+        // Fechas: solo se validan si vienen informadas.
+        $desde = ($query['desde'] ?? '') !== '' ? $this->fecha($query['desde'], 'desde', $errores) : null;
+        $hasta = ($query['hasta'] ?? '') !== '' ? $this->fecha($query['hasta'], 'hasta', $errores) : null;
+
+        if ($desde !== null && $hasta !== null && $hasta < $desde) {
+            $errores['hasta'] = 'La fecha "hasta" no puede ser anterior a "desde".';
+        }
+        $filtros['desde'] = $desde?->format('Y-m-d');   
+        $filtros['hasta'] = $hasta?->format('Y-m-d');
+
+        // Búsqueda por nombre: texto de hasta 100 caracteres.
+        $q = $query['q'] ?? '';
+        if ($q !== '') {
+            if (!is_string($q) || mb_strlen($q) > 100) {
+                $errores['q'] = 'Búsqueda no válida (máximo 100 caracteres).';
+            } else {
+                $filtros['q'] = trim($q);
+            }
+        }
+
+        if ($errores) {
+            throw new ValidationException($errores);
+        }
+
+        return $filtros;
+    }
 }

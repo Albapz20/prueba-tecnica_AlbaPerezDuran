@@ -58,6 +58,12 @@ final class ReservaService
         return $this->obtenerDetalle($id);
     }
 
+    // Lista reservas aplicando filtros ya validados. 
+    public function listar(array $filtros): array
+    {
+        return $this->reservas->buscar($filtros);
+    }
+    
     // Devuelve la reserva con su historial de eventos, o null si no existe.
     public function obtenerDetalle(int $id): ?array
     {
