@@ -262,7 +262,54 @@ th.num {
     font-size: .8rem; 
     color: var(--suave); }
 
+/* Cabecera de página con botón a la derecha. */
+.cabecera-pagina { 
+    display: flex; 
+    flex-wrap: wrap; 
+    gap: .75rem; 
+    align-items: center; 
+    justify-content: space-between; 
+}
+
+/* Diálogo del formulario de alta */
+dialog { 
+    border: 0; 
+    border-radius: 10px; 
+    padding: 1.25rem; 
+    width: min(520px, 94vw); 
+    box-shadow: 0 10px 40px rgba(0,0,0,.3); 
+}
+
+dialog::backdrop { 
+    background: rgba(0,0,0,.45); 
+}
+
+dialog form { 
+    display: grid; 
+    gap: .75rem; 
+}
+
+.fila-doble { 
+    display: grid; 
+    grid-template-columns: 1fr 1fr; 
+    gap: .75rem; 
+}
+
+.error-campo { 
+    color: var(--peligro); 
+    font-size: .8rem; 
+    font-weight: 400; 
+    min-height: 1em; 
+}
+
+.dialogo-acciones { 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: .5rem; 
+}
+
 @media (max-width: 600px) {
     .datos { grid-template-columns: 1fr; gap: 0; }
     .datos dd { margin-bottom: .6rem; }
+    .fila-doble { grid-template-columns: 1fr;}
 }

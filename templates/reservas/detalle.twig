@@ -6,7 +6,15 @@
 {% block contenido %}
     <p><a href="/">← Volver al listado</a></p>
 
-    <h1>Reserva #{{ reserva.id }} <span id="estado-etiqueta">{{ ui.estado(reserva.estado) }}</span></h1>
+    <div class="cabecera-pagina">
+        <h1>Reserva #{{ reserva.id }} <span id="estado-etiqueta">{{ ui.estado(reserva.estado) }}</span></h1>
+        <div class="acciones">
+            <button type="button" class="boton boton-primario" data-accion="confirmada" data-id="{{ reserva.id }}"
+                    {{ reserva.estado != 'pendiente' ? 'hidden' }}>Confirmar</button>
+            <button type="button" class="boton boton-peligro" data-accion="cancelada" data-id="{{ reserva.id }}"
+                    {{ reserva.estado == 'cancelada' ? 'hidden' }}>Cancelar reserva</button>
+        </div>
+    </div>
 
     <section class="tarjeta">
         <h2>Datos</h2>
