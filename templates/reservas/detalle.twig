@@ -1,0 +1,37 @@
+{% extends 'base.twig' %}
+{% import '_macros.twig' as ui %}
+
+{% block titulo %}Reserva #{{ reserva.id }}{% endblock %}
+
+{% block contenido %}
+    <p><a href="/">← Volver al listado</a></p>
+
+    <h1>Reserva #{{ reserva.id }} <span id="estado-etiqueta">{{ ui.estado(reserva.estado) }}</span></h1>
+
+    <section class="tarjeta">
+        <h2>Datos</h2>
+        <dl class="datos">
+            <dt>Huésped</dt>      <dd>{{ reserva.nombre_huesped }}</dd>
+            <dt>Email</dt>        <dd>{{ reserva.email_huesped }}</dd>
+            <dt>Alojamiento</dt>  <dd>{{ reserva.nombre_alojamiento }}</dd>
+            <dt>Entrada</dt>      <dd>{{ reserva.fecha_entrada|date('d/m/Y') }}</dd>
+            <dt>Salida</dt>       <dd>{{ reserva.fecha_salida|date('d/m/Y') }}</dd>
+            <dt>Importe</dt>      <dd>{{ reserva.importe|number_format(2, ',', '.') }} €</dd>
+            <dt>Notas</dt>        <dd>{{ reserva.notas|default('—')|nl2br }}</dd>
+            <dt>Creada</dt>       <dd>{{ reserva.fecha_creacion|date('d/m/Y H:i') }}</dd>
+        </dl>
+    </section>
+
+    <section class="tarjeta">
+        <h2>Historial</h2>
+        <ol id="timeline" class="timeline">
+            {% for e in reserva.eventos %}
+                <li>
+                    <time>{{ e.fecha_creacion|date('d/m/Y H:i') }}</time>
+                    <strong>{{ e.tipo }}</strong>
+                    <span>{{ e.descripcion }}</span>
+                </li>
+            {% endfor %}
+        </ol>
+    </section>
+{% endblock %}

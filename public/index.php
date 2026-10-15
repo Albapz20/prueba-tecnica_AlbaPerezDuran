@@ -2,6 +2,7 @@
 declare(strict_types=1);
 
 use ReservasAlba\Controller\ReservaApiController;
+use ReservasAlba\Controller\ReservaVistaController;
 use ReservasAlba\Database;
 use ReservasAlba\Exception\ConflictException;
 use ReservasAlba\Exception\HttpException;
@@ -14,56 +15,72 @@ use ReservasAlba\Repository\ReservaEventoRepository;
 use ReservasAlba\Repository\ReservaRepository;
 use ReservasAlba\Service\ReservaService;
 use ReservasAlba\Validation\ReservaValidator;
+use Twig\Environment;
+use Twig\Loader\FilesystemLoader;
 
-// Autoloading de clases: cualquier clase que empiece por ReservasAlba\ se carga desde src/
-spl_autoload_register(function (string $clase): void {
-    $prefijo = 'ReservasAlba\\';
-    if (!str_starts_with($clase, $prefijo)) {
-        return;   
-    }
-    $relativa = substr($clase, strlen($prefijo));
-    $ruta = __DIR__ . '/../src/' . str_replace('\\', '/', $relativa) . '.php';
-    if (is_file($ruta)) {
-        require $ruta;
-    }
-});
+require __DIR__ . '/../vendor/autoload.php';
 
-// Cabeceras de seguridad HTTP.
-header('X-Content-Type-Options: nosniff');   
-header('X-Frame-Options: DENY');             
+// Cabeceras de seguridad.
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: DENY');
 header('Referrer-Policy: same-origin');
+header("Content-Security-Policy: default-src 'self'; frame-ancestors 'none'; base-uri 'self'; form-action 'self'");
 
-// Desactivar la visualización de errores de PHP al cliente.
+// Nunca mostrar errores de PHP al cliente.
 ini_set('display_errors', '0');
 
+$request = Request::desdeGlobales();
+$esApi   = str_starts_with($request->ruta, '/api/');
+
+// Twig: motor de plantillas para las páginas HTML.
+$twig = new Environment(new FilesystemLoader(__DIR__ . '/../templates'), [
+    'autoescape' => 'html',
+]);
+
+// Función para responder errores, ya sea en JSON (API) o HTML (vistas).
+$responderError = function (int $codigo, string $mensaje, array $detalles = []) use ($esApi, $twig): void {
+    if ($esApi) {
+        JsonResponse::error($codigo, $mensaje, $detalles);
+        return;
+    }
+    http_response_code($codigo);
+    header('Content-Type: text/html; charset=utf-8');
+    echo $twig->render('error.twig', ['codigo' => $codigo, 'mensaje' => $mensaje]);
+};
+
 try {
-    $pdo = Database::connect(require __DIR__ . '/../config/database.php');
+    // Montaje de dependencias: repositorios, servicios y controladores.
+    $pdo       = Database::connect(require __DIR__ . '/../config/database.php');
+    $servicio  = new ReservaService($pdo, new ReservaRepository($pdo), new ReservaEventoRepository($pdo));
+    $validador = new ReservaValidator();
 
-    $controlador = new ReservaApiController(
-        new ReservaService($pdo, new ReservaRepository($pdo), new ReservaEventoRepository($pdo)),
-        new ReservaValidator(),
-    );
+    $api    = new ReservaApiController($servicio, $validador);
+    $vistas = new ReservaVistaController($servicio, $validador, $twig);
 
-    // Rutas de la API REST. Cada ruta se asocia a un método del controlador.
+    // Rutas
     $router = new Router();
-    $router->agregar('GET',   '/api/reservas',                [$controlador, 'listar']);
-    $router->agregar('POST',  '/api/reservas',                [$controlador, 'crear']);
-    $router->agregar('GET',   '/api/reservas/{id}',           [$controlador, 'ver']);
-    $router->agregar('PATCH', '/api/reservas/{id}/estado',    [$controlador, 'cambiarEstado']);
+    // Páginas (HTML renderizado con Twig)
+    $router->agregar('GET', '/',                 [$vistas, 'listar']);
+    $router->agregar('GET', '/reservas/{id}',    [$vistas, 'ver']);
+    // API (JSON)
+    $router->agregar('GET',   '/api/reservas',             [$api, 'listar']);
+    $router->agregar('POST',  '/api/reservas',             [$api, 'crear']);
+    $router->agregar('GET',   '/api/reservas/{id}',        [$api, 'ver']);
+    $router->agregar('PATCH', '/api/reservas/{id}/estado', [$api, 'cambiarEstado']);
 
-    $router->despachar(Request::desdeGlobales());
+    $router->despachar($request);
 
-// Captura de errores y envío de respuesta JSON con el código HTTP adecuado.
+// Manejo de errores.
 } catch (ValidationException $e) {
-    JsonResponse::error(400, $e->getMessage(), $e->errores());   
+    $responderError(400, $e->getMessage(), $e->errores());
 } catch (NotFoundException $e) {
-    JsonResponse::error(404, $e->getMessage());
+    $responderError(404, $e->getMessage());
 } catch (ConflictException $e) {
-    JsonResponse::error(409, $e->getMessage());
+    $responderError(409, $e->getMessage());
 } catch (HttpException $e) {
-    JsonResponse::error($e->status(), $e->getMessage());          
+    $responderError($e->status(), $e->getMessage());
 } catch (Throwable $e) {
-    // Registrar el error en el log del servidor para poder investigarlo, pero no mostrarlo al cliente.
+    // Error inesperado: el detalle va al log del servidor, al cliente un mensaje genérico.
     error_log(sprintf('[reservas] %s: %s en %s:%d', $e::class, $e->getMessage(), $e->getFile(), $e->getLine()));
-    JsonResponse::error(500, 'Error interno del servidor.');
+    $responderError(500, 'Error interno del servidor.');
 }

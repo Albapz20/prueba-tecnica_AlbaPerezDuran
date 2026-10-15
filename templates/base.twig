@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="es">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    {# "block" define un hueco que las páginas hijas pueden rellenar #}
+    <title>{% block titulo %}Reservas{% endblock %} · Gestión de reservas</title>
+    <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+    <header class="barra">
+        <a class="marca" href="/">Gestión de reservas</a>
+    </header>
+
+    <main class="contenedor">
+        {# Aquí el JS mostrará avisos de éxito/error #}
+        <div id="aviso" role="status" aria-live="polite" hidden></div>
+
+        {% block contenido %}{% endblock %}
+    </main>
+
+    {% block scripts %}{% endblock %}
+</body>
+</html>

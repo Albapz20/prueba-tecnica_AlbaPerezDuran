@@ -1,0 +1,12 @@
+{# "extends": esta página hereda todo el esqueleto de base.twig #}
+{% extends 'base.twig' %}
+
+{% block titulo %}Error {{ codigo }}{% endblock %}
+
+{% block contenido %}
+    <section class="tarjeta">
+        <h1>Error {{ codigo }}</h1>
+        <p>{{ mensaje }}</p>
+        <p><a href="/">Volver al listado</a></p>
+    </section>
+{% endblock %}

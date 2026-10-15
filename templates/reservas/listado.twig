@@ -1,0 +1,74 @@
+{% extends 'base.twig' %}
+{# "import": trae las macros del fichero y las deja disponibles bajo el nombre "ui" #}
+{% import '_macros.twig' as ui %}
+
+{% block titulo %}Listado{% endblock %}
+
+{% block contenido %}
+    <h1>Reservas</h1>
+
+    {# Si los filtros de la URL eran inválidos, mostramos el aviso #}
+    {% if error %}
+        <p class="aviso aviso-error">{{ error }}</p>
+    {% endif %}
+
+    {# Formulario GET: funciona sin JavaScript (recarga la página con ?estado=...). #}
+    <form id="filtros" class="filtros tarjeta" method="get" action="/">
+        <label>Estado
+            <select name="estado">
+                <option value="">Todos</option>
+                {% for e in estados %}
+                    {# "default('')" evita error si el filtro no se envió #}
+                    <option value="{{ e }}" {{ filtros.estado|default('') == e ? 'selected' }}>{{ e|capitalize }}</option>
+                {% endfor %}
+            </select>
+        </label>
+        <label>Desde <input type="date" name="desde" value="{{ filtros.desde|default('') }}"></label>
+        <label>Hasta <input type="date" name="hasta" value="{{ filtros.hasta|default('') }}"></label>
+        <label>Huésped <input type="search" name="q" value="{{ filtros.q|default('') }}" maxlength="100" placeholder="Nombre..."></label>
+        <div class="filtros-acciones">
+            <button type="submit" class="boton boton-primario">Filtrar</button>
+            <a href="/" class="boton">Limpiar</a>
+        </div>
+    </form>
+
+    {# length = nº de elementos. Si es 1 va en singular. #}
+    <p id="total" class="suave">{{ reservas|length }} reserva{{ reservas|length == 1 ? '' : 's' }}</p>
+
+    {# El contenedor con scroll horizontal evita que la tabla rompa la página en móvil #}
+    <div class="tabla-scroll">
+        <table id="tabla">
+            <thead>
+                <tr>
+                    <th scope="col">Huésped</th>
+                    <th scope="col">Alojamiento</th>
+                    <th scope="col">Entrada</th>
+                    <th scope="col">Salida</th>
+                    <th scope="col" class="num">Importe</th>
+                    <th scope="col">Estado</th>
+                    <th scope="col"><span class="solo-lectores">Acciones</span></th>
+                </tr>
+            </thead>
+            <tbody id="tabla-cuerpo">
+                {# "for ... else": el bloque else se muestra si la lista está vacía #}
+                {% for r in reservas %}
+                    <tr>
+                        <td>{{ r.nombre_huesped }}</td>
+                        <td>{{ r.nombre_alojamiento }}</td>
+                        {# Filtro "date": formatea 2026-05-10 como 10/05/2026 #}
+                        <td>{{ r.fecha_entrada|date('d/m/Y') }}</td>
+                        <td>{{ r.fecha_salida|date('d/m/Y') }}</td>
+                        {# number_format(decimales, separador decimal, separador de miles) #}
+                        <td class="num">{{ r.importe|number_format(2, ',', '.') }} €</td>
+                        <td>{{ ui.estado(r.estado) }}</td>
+                        <td class="acciones">
+                            <a href="/reservas/{{ r.id }}">Ver</a>
+                        </td>
+                    </tr>
+                {% else %}
+                    <tr><td colspan="7" class="suave">No hay reservas que coincidan con los filtros.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+{% endblock %}
