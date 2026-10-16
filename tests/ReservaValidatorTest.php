@@ -9,23 +9,18 @@ use ReservasAlba\Domain\EstadoReserva;
 use ReservasAlba\Exception\ValidationException;
 use ReservasAlba\Validation\ReservaValidator;
 
-/**
- * Comprueba que el validador acepta datos correctos, rechaza los incorrectos
- * y descarta lo que no esperaba. No necesita base de datos.
- */
+// Comprueba que el validador acepta datos correctos, rechaza los incorrectos.
 final class ReservaValidatorTest extends TestCase
 {
     private ReservaValidator $validador;
     private DateTimeImmutable $hoy;
 
-    /** Se ejecuta antes de cada test. Fijamos "hoy" para que los tests no dependan del día real. */
     protected function setUp(): void
     {
         $this->validador = new ReservaValidator();
         $this->hoy = new DateTimeImmutable('2026-10-14');
     }
 
-    /** Datos válidos de partida; cada test cambia solo lo que quiere probar. */
     private function datosValidos(array $cambios = []): array
     {
         return array_merge([
@@ -39,7 +34,6 @@ final class ReservaValidatorTest extends TestCase
         ], $cambios);
     }
 
-    /** Ejecuta el validador y devuelve los errores por campo (falla el test si no hubo ninguno). */
     private function erroresDe(array $datos): array
     {
         try {
@@ -54,9 +48,9 @@ final class ReservaValidatorTest extends TestCase
     {
         $resultado = $this->validador->validarCrear($this->datosValidos(), $this->hoy);
 
-        $this->assertSame('Alba Pérez', $resultado['nombre_huesped']);   // sin espacios sobrantes
-        $this->assertSame('199.90', $resultado['importe']);              // dos decimales
-        $this->assertNull($resultado['notas']);                          // '' pasa a null
+        $this->assertSame('Alba Pérez', $resultado['nombre_huesped']);   
+        $this->assertSame('199.90', $resultado['importe']);              
+        $this->assertNull($resultado['notas']);                          
     }
 
     public function testCamposObligatorios(): void
@@ -82,7 +76,6 @@ final class ReservaValidatorTest extends TestCase
 
     public function testRechazaFechaInexistente(): void
     {
-        // El 31 de febrero no existe: sin la comprobación extra, PHP lo "corregiría" a marzo.
         $errores = $this->erroresDe($this->datosValidos(['fecha_entrada' => '2027-02-31', 'fecha_salida' => '2027-03-05']));
         $this->assertArrayHasKey('fecha_entrada', $errores);
     }
@@ -101,7 +94,6 @@ final class ReservaValidatorTest extends TestCase
 
     public function testDescartaCamposNoEsperados(): void
     {
-        // Un cliente malintencionado intenta colar un estado: nunca debe llegar al resultado.
         $resultado = $this->validador->validarCrear($this->datosValidos(['estado' => 'confirmada', 'id' => 99]), $this->hoy);
 
         $this->assertArrayNotHasKey('estado', $resultado);

@@ -7,15 +7,9 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\TestCase;
 use ReservasAlba\Domain\EstadoReserva as E;
 
-/**
- * Comprueba la tabla de transiciones de estado: es la regla de negocio central.
- */
+// Comprueba que las transiciones de estado de reserva son correctas.
 final class EstadoReservaTest extends TestCase
 {
-    /**
-     * Un "data provider" devuelve varios casos [estado actual, destino, ¿permitido?]
-     * y PHPUnit ejecuta el mismo test una vez por cada uno.
-     */
     public static function transiciones(): array
     {
         return [
