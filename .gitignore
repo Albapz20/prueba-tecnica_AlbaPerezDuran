@@ -1,3 +1,4 @@
 /vendor/
 .env
 .phpunit.result.cache
+/config/database.local.php

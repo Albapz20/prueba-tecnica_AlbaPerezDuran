@@ -10,3 +10,10 @@ return [
     'password' => getenv('DB_PASS') !== false ? getenv('DB_PASS') : '', 
     'charset'  => 'utf8mb4',
 ];
+
+$local = __DIR__ . '/database.local.php';
+if (is_file($local)) {
+    $config = array_merge($config, require $local);
+}
+
+return $config;

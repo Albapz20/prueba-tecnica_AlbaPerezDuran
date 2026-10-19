@@ -1,0 +1,6 @@
+# Redirige todo a public/. Esta carpeta es la única accesible desde internet:
+# src/, vendor/, config/ o database/ no se pueden pedir por URL.
+Options -Indexes
+RewriteEngine On
+RewriteCond %{REQUEST_URI} !^/public/
+RewriteRule ^(.*)$ public/$1 [L]
